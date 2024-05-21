@@ -28,6 +28,7 @@ const remixHandler = createRequestHandler({
 	},
 });
 
+
 // http://expressjs.com/en/advanced/best-practice-security.html#at-a-minimum-disable-x-powered-by-header
 app.disable("x-powered-by");
 
@@ -51,6 +52,7 @@ app.use(
 // more aggressive with this caching.
 app.use(express.static("build/client", { maxAge: "1h" }));
 
+
 // handle SSR requests
 app.all("*", (req, res, next) => {
 	// Pass the custom variable to the request handler
@@ -62,7 +64,7 @@ const port = process.env.PORT || 3000;
 
 // Start the HTTP server
 httpServer.listen(port, () => {
-	const url = `http://localhost:${port}/`
+	const url = `http://localhost:${port}/dashboard/clients`
 	console.log(`App running at ${url}`)
 	
 	if(process.env.NODE_ENV === 'development') {
