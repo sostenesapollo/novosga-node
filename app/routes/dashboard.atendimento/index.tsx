@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSignalEffect, useSignals } from "@preact/signals-react/runtime";
 import { socket } from '../dashboard';
 import { Button } from '@/components/ui/button';
-import { ticketsList } from '../dashboard.painel';
+import { ticket, ticketsList } from '../dashboard.painel';
 
 const AtendimentoGuiche = () => {
   useSignals()
@@ -19,22 +19,27 @@ const AtendimentoGuiche = () => {
 
   return (
     <div className="flex flex-col h-screen justify-center items-center bg-blue-400">
-      <span>
+      <span className='flex flex-col space-y-3'>
+        Senha da vez: {ticket.value?.number} - {ticket.value?.priority} 
         <Button variant="outline" className='p-5 text-3xl' onClick={callAgain}>
           <span className='px-4'>
-          Chamar novamente
+          Chamar senha da vez
           </span>
         </Button>
         <Button variant="outline" className='p-5 text-3xl' onClick={callNext}>
           <span className='px-4'>
-          Chamar próxima senhal
+          Chamar próxima senha
           </span>
         </Button>
       </span>
       
       <span className='pt-5 flex flex-col'>
-        Próximas senhas:
-        <ProximasSenhas senhas={ticketsList.value?.tickets}/>
+        {ticketsList.value?.tickets?.length > 0 ? 
+          <ProximasSenhas senhas={ticketsList.value?.tickets}/> :
+          <span className='text-2xl'>
+            Nenhuma senha para ser chamada no momento
+          </span>
+        }
       </span>
     </div>
   );
@@ -44,8 +49,13 @@ export const ProximasSenhas = ({senhas}) => {
   return (
     <span className='space-x-2 pt-3'>
       {senhas?.slice(0,10)?.map((senha, index)=>(
-        <span key={index} className='bg-green-300 text-4xl p-2'>
+        <span key={index} className='bg-green-300 text-4xl p-2 '>
+        <>
           {senha.number}
+        </>
+        <span className='bg-green-300 text-xs p-2'>
+          {senha?.priority}
+        </span>
         </span>
       ))}
     </span>

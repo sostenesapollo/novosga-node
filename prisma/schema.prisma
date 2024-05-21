@@ -18,6 +18,8 @@ model Ticket {
   desk String
   waiting Boolean @default(true)
 
+  called_counter Int @default(0)
+
   createdAt DateTime @default(now())
 
   @@map("tickets")

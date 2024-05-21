@@ -34,13 +34,17 @@ export const getCompanyOnlyGroup = (company_id: string) =>
 	`company/${company_id}`;
 
 async function emitAllTicketsNotCalled(io) {
-	const tickets = await prisma.ticket.findMany({where:{waiting: true}, orderBy: {createdAt: 'asc'}})
+	const tickets = await prisma.ticket.findMany({where:{waiting: true, called_counter: 0}, orderBy: {createdAt: 'asc'}})
 	io.sockets.emit('new-tickets-available', { tickets })
 }
 
 async function callAgain(io) {
-	const next = await prisma.ticket.findFirst({where: {waiting: true}})
+	const next = await prisma.ticket.findFirst({where: {waiting: true}, orderBy: {createdAt: 'asc'}})
 	console.log('Call again', next);
+
+	if(!next) return;
+
+	await prisma.ticket.update({where: {id: next?.id}, data: {called_counter: (next?.called_counter || 0) + 1 }})
 	io.sockets.emit('call-ticket', next)
 	await emitAllTicketsNotCalled(io)
 }
@@ -63,8 +67,12 @@ io.on("connection", async (socket) => {
 	});
 
 	socket.on('call-next', async (data: any) => {
+		console.log('call next');
+		
 		let next = await prisma.ticket.findFirst({where: {waiting: true}, orderBy: {createdAt: 'asc'}})
 		
+		console.log('next', next);
+
 		if(!next) return socket.emit('message', {message: 'Nenhuma senha para ser chamada', type: 'info'})
 
 		await prisma.ticket.update({where: {id: next?.id}, data: {waiting: false}})
