@@ -64,7 +64,7 @@ const port = process.env.PORT || 3000;
 
 // Start the HTTP server
 httpServer.listen(port, () => {
-	const url = `http://localhost:${port}/dashboard/clients`
+	const url = `http://localhost:${port}/dashboard/painel`
 	console.log(`App running at ${url}`)
 	
 	if(process.env.NODE_ENV === 'development') {

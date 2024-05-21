@@ -93,9 +93,8 @@ export default function Dashboard() {
           )}
         </nav>
       </aside>
-      <div className="flex flex-grow flex-col h-fit sm:gap-4 sm:py- sm:pl-14">
-        <Outlet />
-      </div>
+      <div className="flex flex-grow flex-col h-fit sm:gap-4 sm:py- sm:pl-14"></div>
+      <Outlet />
     </div>
   );
 }

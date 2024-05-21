@@ -33,11 +33,27 @@ const io = new Server(httpServer);
 export const getCompanyOnlyGroup = (company_id: string) =>
 	`company/${company_id}`;
 
+async function emitAllTicketsNotCalled(io) {
+	const tickets = await prisma.ticket.findMany({where:{waiting: true}, orderBy: {createdAt: 'asc'}})
+	io.sockets.emit('new-tickets-available', { tickets })
+}
+
+async function callAgain(io) {
+	const next = await prisma.ticket.findFirst({where: {waiting: true}})
+	console.log('Call again', next);
+	io.sockets.emit('call-ticket', next)
+	await emitAllTicketsNotCalled(io)
+}
+
 io.on("connection", async (socket) => {
 	// const user = (
 	// 	await sessionStorage.getSession(socket.handshake.headers.cookie)
 	// ).data as CookieParams;
 
+
+	callAgain(io).then(()=>{})
+	emitAllTicketsNotCalled(io).then(()=>{})
+	
 	console.log(
 		`🔔 ✅ New Frontend Socket Connected [${socket.id}]]`,
 	);
@@ -47,33 +63,33 @@ io.on("connection", async (socket) => {
 	});
 
 	socket.on('call-next', async (data: any) => {
-		let next = await prisma.ticket.findFirst({where: {waiting: true}})
+		let next = await prisma.ticket.findFirst({where: {waiting: true}, orderBy: {createdAt: 'asc'}})
+		
 		if(!next) return socket.emit('message', {message: 'Nenhuma senha para ser chamada', type: 'info'})
 
 		await prisma.ticket.update({where: {id: next?.id}, data: {waiting: false}})
 		next = await prisma.ticket.findFirst({where: {waiting: true}})
-		io.sockets.emit('call-next', next)
+		io.sockets.emit('call-ticket', next)
+		await emitAllTicketsNotCalled(io)
 	})
 
-	socket.on('call-again', async (data: any) => {
-		const next = await prisma.ticket.findFirst({where: {waiting: true}})
-		io.sockets.emit('call-again', next)
-	})
+	socket.on('call-again', (data: any) => callAgain(io))
 
 	socket.on('generate-ticket', async (data: any) => {
+		// await prisma.ticket.deleteMany()
 		console.log('gerar ticket');
-		
-		const number = Math.random().toString(36).substring(7)
+		let lastNumber = await prisma.ticket.findFirst({orderBy: {createdAt: 'desc'}}) || {number: '10'}
+
 		await prisma.ticket.create({
 			data: {
 				priority: data.priority,
 				waiting: true,
 				desk: '1',
-				number: number
+				number: String(parseInt(lastNumber?.number) + 1)
 			}
 		})
 
-		io.sockets.emit('new-tickets-available', true)
+		await emitAllTicketsNotCalled(io)
 	})
 });
 
